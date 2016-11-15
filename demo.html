@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<link rel="stylesheet" href="http://openlayers.org/en/v3.7.0/css/ol.css" type="text/css">
+	<script src="http://openlayers.org/en/v3.14.2/build/ol-debug.js" type="text/javascript"></script>
+	<script src="https://code.jquery.com/jquery-1.11.3.min.js" type="text/javascript"></script>
+	<!--<script src="./logo.js"type="text/javascript"></script>-->
+	<script src="./ol3Interface.js"></script>
+	<style>
+	#map{
+		float:left;
+		margin:0px;
+		margin-right:0.5%;
+		padding:0px;
+		width:100%;
+		height: 500px;
+	}
+	#destMap{
+		float:left;
+		margin:0px;
+		margin-left:0.5%;
+		padding:0px;
+		width:49.5%;
+		height: 500px;
+		display:none;
+	}
+	</style>
+</head>
+
+<body>
+	<div id="map"></div>
+	<div id="destMap"></div>
+	<input type="button" value="지도 나누기" id="btnDOM" data-val=false>
+	<input type="button" value="선택" class="changeArea" data-val="true">
+	<input type="button" value="영역 그리기" class="changeArea" data-val="polygon">
+	<input type="button" value="영역 보이기/숨기기" class="changeArea" data-val="true"> <!--영역 보이기 숨기기-->
+	<input type="button" value="25Km2" class="changeArea" data-val="5000">
+	<input type="button" value="9Km2" class="changeArea" data-val="3000">
+	<input type="button" value="4Km2" class="changeArea" data-val="2000">
+	<input type="button" value="1Km2" class="changeArea" data-val="1000">
+	<input type="button" value="영역 초기화" class="changeArea">
+	<input type="button" value="영역 면적" class="getArea">
+    <div id="extent"></div>
+    <div id="coords"></div>
+    <div id="area"></div>
+	<script>
+        var minZoom = 1, maxZoom = 16, startZoom = 10;
+		var mView = new ol.View({
+			center  : [14248895, 4300621],
+			zoom    : startZoom,
+			maxZoom : maxZoom,
+			minZoom : minZoom
+		});
+		var basemap = new ol.layer.Tile({
+			title  : 'basemap',
+			source : new ol.source.OSM(),
+			zIndex: -9999
+		});
+		var map = new ol.Map({
+			target   : 'map',
+			view     : mView,
+			layers   : [ basemap ],
+			controls : [ new ol.control.Zoom() ]
+		});
+		var destmap = new ol.Map({
+			target   : 'destMap',
+			view     : map.getView(),
+			layers   : [ basemap ]
+		});
+        var mapPA = ( typeof (mapPA) !== 'undefined') ? mapPA : new ProcessArea(map, destmap);
+     
+        map.on('pointermove', function(evt){
+            if (evt.dragging) {
+                return ;
+            }
+            $('#area').html('area :' + mapPA.getAreaString());
+        });
+
+        var draw_area = $('.getArea');
+        draw_area.click(function(){
+        	mapPA = ( typeof (mapPA) !== 'undefined') ? mapPA : null;
+        	if (mapPA == null) {
+        		return -1;
+        	}
+            $('#area').html('area :' + mapPA.getAreaString());
+        });
+
+
+        var draw_type = $('.changeArea');
+        draw_type.click(function(){
+        	var type = $(this).val();
+        	var val = $(this).attr('data-val');
+        	if (type == '영역 그리기') {
+        		mapPA.changeMode('polygon');
+        	} else if (type == '선택') {
+        		mapPA.changeMode('select');
+        	} else if (type == '영역 초기화') {
+        		mapPA.changeMode('polygon', true);
+        	} else if (type == '영역 보이기/숨기기'){
+        		if (val == "true"){
+        			mapPA.setVisiable(false);
+        			val = $(this).attr('data-val', false);
+        		} else {
+        			mapPA.setVisiable(true);
+        			val = $(this).attr('data-val', true);	
+        		}
+        	} else {
+        		mapPA = ( typeof (mapPA) !== 'undefined') ? mapPA : new ProcessArea(map, destmap, 'square');
+        		mapPA.changeMode('square');
+        		if (val === '5000') {
+        			mapPA.changeArea(5000);
+        		}
+        		else if (val === '3000') {
+        			mapPA.changeArea(3000);
+        		}
+        		else if (val === '2000') {
+        			mapPA.changeArea(2000);
+        		}
+        		else if (val === '1000') {
+        			mapPA.changeArea(1000);
+        		}
+        	}
+        });
+
+
+        
+		var btn = document.getElementById('btnDOM');
+		btn.onclick = function () {
+			var sw = this.getAttribute('data-val');
+			var map_one = document.getElementById('map');
+			var map_two = document.getElementById('destMap');
+			if (sw === "false") {			
+				this.setAttribute('data-val', true);
+				map_one.style.width = '49.5%';
+				map_two.style.display = 'inline';
+				map_two.style.width = '49.5%';
+				this.value = '지도 없애기';
+			} else {
+				this.setAttribute('data-val', false);
+				map_one.style.width = '100%';
+				map_two.style.display = 'none';
+				this.value = '지도 나누기';
+			}
+			map.updateSize();
+			destmap.updateSize();
+		}
+	</script>
+</body>
+</html>
