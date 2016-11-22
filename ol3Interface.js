@@ -179,7 +179,7 @@ var ProcessArea = (function (ProcessArea, ol) {
             } else if (area_values.area === 1000) {
             	polygon_style.title = (resolution > 40) ? '' : polygon_style.title;
                 text_scale = (text_scale) / 5.0;
-               // image_scale = (image_scale) / 5.0;
+               // image_scale = (image_scale) /l 5.0;
             }
             var fill_obj = new ol.style.Fill({
                 color : polygon_style.fill_color
@@ -444,6 +444,28 @@ var ProcessArea = (function (ProcessArea, ol) {
         },
         getAreaString : function () {
             return area_values.area_string;
+        },
+        getGeoJson : function () {
+          var geometry = vector.getSource().getFeatures()[0].getGeometry().getCoordinates();
+          if (mode === 'square') {
+            geometry = [centerToLeftRight(geometry)].slice();
+          }
+          var geojson = {
+            type : "FeatureCollection",
+            features : []
+          };
+          var feature = {
+            type : "Feature",
+            properties : {
+              _id : "area"
+            },
+            geometry : {
+              type : "Polygon",
+              coordinates: geometry
+            }
+          };
+          geojson.features.push(feature);
+          return geojson;
         },
         setVisiable : function (sw) {
             visiable_sw = sw;

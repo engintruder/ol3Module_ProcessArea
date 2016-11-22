@@ -36,3 +36,4 @@ Method
   - getAreaString
   - setVisiable
   - setDestMapBoolean
+  - getGeoJSON 
